@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juanjo Cinemax — Panel Admin</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #f5c518; --gold-dark: #c9a010;
+    --bg: #07070d; --bg2: #0e0e18; --bg3: #161620; --bg4: #1e1e2a;
+    --text: #f0f0f5; --text-muted: #777790;
+    --accent: #e63946; --accent2: #4ecca3;
+    --border: rgba(255,255,255,0.07);
+    --radius: 10px;
+  }
+
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ===== LOGIN SCREEN ===== */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #0e0e1f 0%, #07070d 70%);
+    position: relative;
+  }
+  #loginScreen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(245,197,24,0.015) 40px, rgba(245,197,24,0.015) 41px),
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(245,197,24,0.015) 40px, rgba(245,197,24,0.015) 41px);
+    pointer-events: none;
+  }
+
+  .login-box {
+    background: var(--bg2);
+    border: 1px solid rgba(245,197,24,0.15);
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    box-shadow: 0 0 60px rgba(245,197,24,0.06), 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .login-logo .icon { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
+  .login-logo .name { font-size: 1.4rem; font-weight: 900; color: var(--gold); letter-spacing: -0.5px; }
+  .login-logo .sub { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+  .login-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 1.75rem; text-align: center; }
+
+  .field { margin-bottom: 1.25rem; }
+  .field label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--gold); }
+  .field input::placeholder { color: var(--text-muted); }
+
+  .login-btn {
+    width: 100%;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: var(--radius);
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+  .login-btn:hover { background: var(--gold-dark); transform: translateY(-1px); }
+  .login-error { color: var(--accent); font-size: 0.82rem; text-align: center; margin-top: 1rem; display: none; padding: 0.6rem; background: rgba(230,57,70,0.08); border-radius: 8px; border: 1px solid rgba(230,57,70,0.2); }
+
+  /* ===== ADMIN PANEL ===== */
+  #adminPanel { display: none; }
+
+  /* HEADER */
+  .admin-header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .admin-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .admin-logo { display: flex; align-items: center; gap: 10px; }
+  .admin-logo .ico { width: 34px; height: 34px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .admin-logo .name { font-size: 1.2rem; font-weight: 800; color: var(--gold); }
+  .admin-logo .badge { background: rgba(78,204,163,0.12); color: var(--accent2); border: 1px solid rgba(78,204,163,0.3); border-radius: 50px; padding: 2px 10px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-left: 8px; }
+  .logout-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* MAIN */
+  .admin-main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; }
+  .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-size: 2.2rem; font-weight: 900; color: var(--text); line-height: 1; }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: var(--accent2); }
+  .stat-value.red { color: var(--accent); }
+
+  /* TABLE */
+  .table-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .table-title { font-size: 1rem; font-weight: 800; color: var(--text); }
+  .table-actions { display: flex; gap: 0.75rem; }
+  .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; }
+  .btn-sm.danger { background: rgba(230,57,70,0.1); color: var(--accent); border: 1px solid rgba(230,57,70,0.2); }
+  .btn-sm.danger:hover { background: rgba(230,57,70,0.2); }
+  .btn-sm.refresh { background: rgba(245,197,24,0.1); color: var(--gold); border: 1px solid rgba(245,197,24,0.2); }
+  .btn-sm.refresh:hover { background: rgba(245,197,24,0.2); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg3); }
+  th { padding: 12px 16px; text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); white-space: nowrap; }
+  td { padding: 14px 16px; font-size: 0.88rem; border-top: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: var(--bg3); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; }
+  .badge.seat { background: rgba(245,197,24,0.1); color: var(--gold); border: 1px solid rgba(245,197,24,0.2); }
+  .badge.combo { background: rgba(78,204,163,0.1); color: var(--accent2); border: 1px solid rgba(78,204,163,0.2); }
+  .code-text { font-family: monospace; font-size: 0.78rem; color: var(--text-muted); letter-spacing: 1px; }
+  .date-text { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* SEAT MAP */
+  .seat-map-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; }
+  .seat-map-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 1.25rem; }
+  .seat-map { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+  .seat-map-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .sm-label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .sm-seat { width: 56px; height: 40px; border-radius: 8px; border: 1.5px solid var(--border); background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+  .sm-seat.occ { background: #3a1a1a; border-color: #6a2a2a; color: var(--accent); }
+  .sm-premium { width: 42px; height: 90px; border-radius: 14px; border: 2px solid #f5c518; background: linear-gradient(180deg, #2a240a, #1a180a); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--gold); }
+  .sm-premium.occ { background: #3a1a1a; border-color: #6a2a2a; color: var(--accent); }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem; }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; opacity: 0.4; }
+
+  @media (max-width: 800px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .admin-header { padding: 0 1rem; }
+    table { font-size: 0.78rem; }
+    th, td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🎬</span>
+      <div class="name">Juanjo Cinemax</div>
+      <div class="sub">Panel de Administración</div>
+    </div>
+    <div class="login-title">🔐 Acceso exclusivo</div>
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="Ingresa tu usuario" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="Ingresa tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🚀 Entrar al panel</button>
+    <div class="login-error" id="loginError">❌ Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-logo">
+        <div class="ico">🎬</div>
+        <div class="name">Juanjo Cinemax</div>
+        <div class="badge">Admin</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">🚪 Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total reservas</div>
+        <div class="stat-value gold" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Personas totales</div>
+        <div class="stat-value" id="statPeople">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Asientos ocupados</div>
+        <div class="stat-value red" id="statSeats">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Asientos disponibles</div>
+        <div class="stat-value green" id="statFree">7</div>
+      </div>
+    </div>
+
+    <!-- SEAT MAP -->
+    <div class="seat-map-section">
+      <div class="seat-map-title">🗺️ Mapa de asientos en tiempo real</div>
+      <div class="seat-map" id="seatMapDisplay"></div>
+    </div>
+
+    <!-- RESERVATIONS TABLE -->
+    <div class="table-section">
+      <div class="table-header">
+        <div class="table-title">📋 Todas las reservas</div>
+        <div class="table-actions">
+          <button class="btn-sm refresh" onclick="loadData()">🔄 Actualizar</button>
+          <button class="btn-sm danger" onclick="clearAll()">🗑️ Limpiar todo</button>
+        </div>
+      </div>
+      <div id="tableContainer">
+        <div class="empty-state"><span class="empty-icon">📭</span>No hay reservas aún</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var ADMIN_USER = 'juanjo25';
+  var ADMIN_PASS = 'Juanjo25';
+  var RESERV_KEY = 'jcinemax_reservations';
+  var SEATS_KEY = 'jcinemax_occupied_seats';
+  var ALL_SEATS = ['1-I','2-I','3-I','PREMIUM','1-D','2-D','3-D'];
+
+  function doLogin() {
+    var user = document.getElementById('loginUser').value.trim();
+    var pass = document.getElementById('loginPass').value;
+    var err = document.getElementById('loginError');
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      loadData();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+      setTimeout(function() { err.style.display = 'none'; }, 4000);
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  }
+
+  function loadData() {
+    var reservations = [];
+    var occupied = [];
+    try { reservations = JSON.parse(localStorage.getItem(RESERV_KEY) || '[]'); } catch(e) {}
+    try { occupied = JSON.parse(localStorage.getItem(SEATS_KEY) || '[]'); } catch(e) {}
+
+    // Stats
+    var totalPeople = reservations.reduce(function(a, r) { return a + (r.people || 0); }, 0);
+    document.getElementById('statTotal').textContent = reservations.length;
+    document.getElementById('statPeople').textContent = totalPeople;
+    document.getElementById('statSeats').textContent = occupied.length;
+    document.getElementById('statFree').textContent = Math.max(0, ALL_SEATS.length - occupied.length);
+
+    // Seat map
+    renderSeatMap(occupied);
+
+    // Table
+    renderTable(reservations);
+  }
+
+  function renderSeatMap(occupied) {
+    var container = document.getElementById('seatMapDisplay');
+
+    function makeSeat(id, isPremium) {
+      var isOcc = occupied.includes(id);
+      if (isPremium) {
+        return '<div class="sm-premium ' + (isOcc ? 'occ' : '') + '">' + (isOcc ? '❌' : '⭐') + '<br><span style="font-size:0.55rem">' + id + '</span></div>';
+      }
+      return '<div class="sm-seat ' + (isOcc ? 'occ' : '') + '">' + (isOcc ? '❌' : '🛋') + '<br>' + id + '</div>';
+    }
+
+    container.innerHTML =
+      '<div class="seat-map-group"><div class="sm-label">Mueble Izquierdo</div>' +
+        makeSeat('1-I') + makeSeat('2-I') + makeSeat('3-I') +
+      '</div>' +
+      '<div class="seat-map-group" style="padding-top:20px"><div class="sm-label">Premium</div>' + makeSeat('PREMIUM', true) + '</div>' +
+      '<div class="seat-map-group"><div class="sm-label">Mueble Derecho</div>' +
+        makeSeat('1-D') + makeSeat('2-D') + makeSeat('3-D') +
+      '</div>' +
+      '<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);width:100%;display:flex;gap:1.5rem;font-size:0.78rem;color:var(--text-muted);align-items:center;">' +
+        '<span>🛋 Disponible</span><span>❌ Ocupado</span>' +
+        '<span style="color:var(--gold)">Total: ' + occupied.length + '/' + ALL_SEATS.length + ' asientos ocupados</span>' +
+      '</div>';
+  }
+
+  function renderTable(reservations) {
+    var container = document.getElementById('tableContainer');
+
+    if (!reservations.length) {
+      container.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span>No hay reservas registradas aún</div>';
+      return;
+    }
+
+    var rows = reservations.slice().reverse().map(function(r, i) {
+      var d = new Date(r.date);
+      var dateStr = d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+      var seats = (r.seats || []).map(function(s) { return '<span class="badge seat">' + s + '</span>'; }).join(' ');
+      return '<tr>' +
+        '<td><strong style="color:var(--text)">' + escapeHtml(r.name) + '</strong></td>' +
+        '<td style="color:var(--text-muted)">' + escapeHtml(r.email) + '</td>' +
+        '<td>' + seats + '</td>' +
+        '<td><span style="font-size:0.82rem;color:var(--text)">' + r.people + ' pers.</span></td>' +
+        '<td><span class="badge combo">' + escapeHtml(r.combo || '—') + '</span></td>' +
+        '<td><span class="code-text">' + escapeHtml(r.code || '—') + '</span></td>' +
+        '<td><span class="date-text">' + dateStr + '</span></td>' +
+        '<td><button class="btn-sm danger" onclick="deleteReservation(' + (reservations.length - 1 - i) + ')">Eliminar</button></td>' +
+      '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<table><thead><tr>' +
+        '<th>Nombre</th><th>Correo</th><th>Asientos</th><th>Personas</th><th>Combo</th><th>Código</th><th>Fecha</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function deleteReservation(index) {
+    if (!confirm('¿Eliminar esta reserva?')) return;
+    try {
+      var reservations = JSON.parse(localStorage.getItem(RESERV_KEY) || '[]');
+      var removed = reservations.splice(index, 1);
+      localStorage.setItem(RESERV_KEY, JSON.stringify(reservations));
+
+      // Also free up the seats if no other reservation uses them
+      if (removed.length && removed[0].seats) {
+        var allUsed = [];
+        reservations.forEach(function(r) { if(r.seats) r.seats.forEach(function(s) { allUsed.push(s); }); });
+        var occupied = JSON.parse(localStorage.getItem(SEATS_KEY) || '[]');
+        occupied = occupied.filter(function(s) { return allUsed.includes(s); });
+        localStorage.setItem(SEATS_KEY, JSON.stringify(occupied));
+      }
+    } catch(e) {}
+    loadData();
+  }
+
+  function clearAll() {
+    if (!confirm('⚠️ ¿Seguro que quieres eliminar TODAS las reservas y liberar todos los asientos? Esta acción no se puede deshacer.')) return;
+    try {
+      localStorage.removeItem(RESERV_KEY);
+      localStorage.removeItem(SEATS_KEY);
+    } catch(e) {}
+    loadData();
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Enter key on user field
+  document.getElementById('loginUser').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('loginPass').focus();
+  });
+</script>
+</body>
+</html>
