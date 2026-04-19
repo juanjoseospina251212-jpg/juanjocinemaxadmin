@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juanjo Cinemax — Panel Admin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--gold:#f5c518;--bg:#07070d;--bg2:#0e0e18;--bg3:#161620;--text:#f0f0f5;--text-muted:#777790;--accent:#e63946;--accent2:#4ecca3;--border:rgba(255,255,255,0.07)}
+  body{font-family:Arial;background:var(--bg);color:var(--text)}
+  #adminPanel{display:none}
+  .login-box{max-width:400px;margin:100px auto;padding:2rem;background:var(--bg2);border-radius:10px}
+  input{width:100%;margin:10px 0;padding:10px;background:var(--bg3);border:1px solid var(--border);color:white}
+  button{padding:10px 15px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-box">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Usuario">
+  <input id="loginPass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter') doLogin()">
+  <button onclick="doLogin()">Entrar</button>
+  <div id="loginError" style="color:red;display:none">Datos incorrectos</div>
+</div>
+
+<div id="adminPanel">
+  <h2>Panel Admin</h2>
+  <button onclick="doLogout()">Cerrar sesión</button>
+  <button onclick="clearAll()">Limpiar todo</button>
+  <div id="stats"></div>
+  <div id="tableContainer"></div>
+</div>
+
+<script>
+var ADMIN_USER='juanjo25';
+var ADMIN_PASS='Juanjo25';
+var RESERV_KEY='jcinemax_reservations';
+var SEATS_KEY='jcinemax_occupied_seats';
+
+function doLogin(){
+  var u=loginUser.value.trim();
+  var p=loginPass.value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    loginScreen.style.display='none';
+    adminPanel.style.display='block';
+    loadData();
+  }else{
+    loginError.style.display='block';
+  }
+}
+
+function doLogout(){
+  adminPanel.style.display='none';
+  loginScreen.style.display='block';
+}
+
+function loadData(){
+  var reservations=JSON.parse(localStorage.getItem(RESERV_KEY)||'[]');
+  var occupied=JSON.parse(localStorage.getItem(SEATS_KEY)||'[]');
+
+  document.getElementById('stats').innerHTML=
+    'Reservas: '+reservations.length+' | Asientos ocupados: '+occupied.length;
+
+  renderTable(reservations);
+}
+
+function renderTable(reservations){
+  if(!reservations.length){
+    tableContainer.innerHTML='No hay reservas';
+    return;
+  }
+
+  var html='<table border="1" style="width:100%;color:white"><tr><th>Nombre</th><th>Email</th><th>Asientos</th><th></th></tr>';
+
+  reservations.forEach(function(r,i){
+    html+='<tr>'+
+      '<td>'+r.name+'</td>'+
+      '<td>'+r.email+'</td>'+
+      '<td>'+r.seats.join(', ')+'</td>'+
+      '<td><button onclick="deleteReservation('+i+')">Eliminar</button></td>'+
+    '</tr>';
+  });
+
+  html+='</table>';
+  tableContainer.innerHTML=html;
+}
+
+function deleteReservation(index){
+  var reservations=JSON.parse(localStorage.getItem(RESERV_KEY)||'[]');
+  var occupied=JSON.parse(localStorage.getItem(SEATS_KEY)||'[]');
+
+  var removed=reservations.splice(index,1)[0];
+
+  if(removed && removed.seats){
+    removed.seats.forEach(function(s){
+      var i=occupied.indexOf(s);
+      if(i>-1) occupied.splice(i,1);
+    });
+  }
+
+  localStorage.setItem(RESERV_KEY,JSON.stringify(reservations));
+  localStorage.setItem(SEATS_KEY,JSON.stringify(occupied));
+
+  loadData();
+}
+
+function clearAll(){
+  if(!confirm('¿Seguro que quieres borrar TODO?')) return;
+  localStorage.removeItem(RESERV_KEY);
+  localStorage.removeItem(SEATS_KEY);
+  loadData();
+}
+</script>
+
+</body>
+</html>
